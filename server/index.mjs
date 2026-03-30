@@ -18,14 +18,23 @@ import { renderCvHtml } from "./cvTemplate.mjs";
 const app = express();
 const port = process.env.PORT || 5174;
 const uploadsDir = path.join(process.cwd(), "uploads");
+
+const requiredEnv = (key) => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required env var: ${key}`);
+  }
+  return value;
+};
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAwRsL48mH5K7XX_Yyq3Q4C56xCkEmPFaM",
-  authDomain: "offers-app-d0fcc.firebaseapp.com",
-  projectId: "offers-app-d0fcc",
-  storageBucket: "offers-app-d0fcc.firebasestorage.app",
-  messagingSenderId: "423300884891",
-  appId: "1:423300884891:web:7d61e1a7cb6f7a7a1a193e",
-  measurementId: "G-V4X92PEMKH",
+  apiKey: requiredEnv("FIREBASE_API_KEY"),
+  authDomain: requiredEnv("FIREBASE_AUTH_DOMAIN"),
+  projectId: requiredEnv("FIREBASE_PROJECT_ID"),
+  storageBucket: requiredEnv("FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: requiredEnv("FIREBASE_MESSAGING_SENDER_ID"),
+  appId: requiredEnv("FIREBASE_APP_ID"),
+  measurementId: process.env.FIREBASE_MEASUREMENT_ID || undefined,
 };
 const firebaseApp = initializeApp(firebaseConfig);
 const firestore = getFirestore(firebaseApp);
