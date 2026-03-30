@@ -1,0 +1,23 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[context.production]
+  command = "npm run build"
+  publish = "dist"
+  environment = { BACKEND_URL = "https://offer-app-backend.render.com" }
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/jobs/*"
+  to = "/jobs.html"
+  status = 200
+
+[dev]
+  port = 3004
+
