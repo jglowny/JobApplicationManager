@@ -189,7 +189,7 @@ const getOfferData = async (targetUrl) => {
     const response = await fetch(parsedUrl.toString(), {
       signal: controller.signal,
       headers: {
-        "User-Agent": "offer-app/1.0 (+local)",
+        "User-Agent": "JobApplicationManager/1.0 (+local)",
       },
     });
 
@@ -726,7 +726,7 @@ app.get("/api/offer", async (req, res) => {
     const response = await fetch(parsedUrl.toString(), {
       signal: controller.signal,
       headers: {
-        "User-Agent": "offer-app/1.0 (+local)",
+        "User-Agent": "JobApplicationManager/1.0 (+local)",
       },
     });
 

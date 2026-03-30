@@ -6,9 +6,9 @@
 - Kliknij "New +"
 
 ## Krok 2: New Web Service
-1. Wybierz repo `offer-app`
+1. Wybierz repo `JobApplicationManager`
 2. Ustawienia:
-   - **Name**: `offer-app-backend`
+   - **Name**: `jam-backend`
    - **Environment**: `Node`
    - **Build Command**: `npm install`
    - **Start Command**: `npm run server`
@@ -19,9 +19,9 @@ W Render Settings → Environment:
 - Nic nie trzeba, backend nie ma zależności
 
 ## Krok 4: Ustaw URL w Netlify
-1. Po deploymencie, skopiuj URL z Render (np. `https://offer-app-backend.render.com`)
+1. Po deploymencie, skopiuj URL z Render (np. `https://jam-backend.render.com`)
 2. Wejdź do Netlify Settings → Build & deploy → Environment
-3. Dodaj: `BACKEND_URL = https://offer-app-backend.render.com`
+3. Dodaj: `BACKEND_URL = https://jam-backend.render.com`
 4. Redeploy site
 
 ## Krok 5: Weryfikuj
@@ -29,4 +29,4 @@ W Render Settings → Environment:
 - Netlify Functions będą proxy do backendu na Render
 - Playwright na Render będzie robić screenshoty
 
-**Bonus**: Twój backend będzie działać na `https://offer-app-backend.render.com/api/screenshot?url=...`
+**Bonus**: Twój backend będzie działać na `https://jam-backend.render.com/api/screenshot?url=...`

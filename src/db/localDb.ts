@@ -5,7 +5,7 @@ class OfferDatabase extends Dexie {
   offers!: Table<Offer, number>;
 
   constructor() {
-    super("offer-app-db");
+    super("JobApplicationManager-db");
     this.version(1).stores({
       offers: "++id, status, company, createdAt",
     });

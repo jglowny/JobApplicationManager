@@ -132,11 +132,14 @@ function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("offer-app-theme") === "dark";
+    return window.localStorage.getItem("jobapplicationmanager-theme") === "dark";
   });
   const [useFirestore, setUseFirestore] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("offer-app-storage") === "firestore";
+    return (
+      window.localStorage.getItem("jobapplicationmanager-storage") ===
+      "firestore"
+    );
   });
   const [statusFilter, setStatusFilter] = useState<
     "Wszystkie" | "Zakończone" | OfferStatus
@@ -244,14 +247,14 @@ function App() {
   useEffect(() => {
     document.body.classList.toggle("theme-dark", isDarkMode);
     window.localStorage.setItem(
-      "offer-app-theme",
+      "jobapplicationmanager-theme",
       isDarkMode ? "dark" : "light",
     );
   }, [isDarkMode]);
 
   useEffect(() => {
     window.localStorage.setItem(
-      "offer-app-storage",
+      "jobapplicationmanager-storage",
       useFirestore ? "firestore" : "local",
     );
   }, [useFirestore]);
@@ -408,13 +411,11 @@ function App() {
         // dane oferty niedostępne – kontynuuj z tym co jest w formularzu
       }
 
-      const [generated] = await Promise.all([
-        generateAndSaveOfferAssets(
-          normalizedUrl,
-          enrichedForm.company.trim(),
-          enrichedForm.title.trim(),
-        ),
-      ]);
+      const generated = await generateAndSaveOfferAssets(
+        normalizedUrl,
+        enrichedForm.company.trim(),
+        enrichedForm.title.trim(),
+      );
       const screenshotName = generated.screenshot.path.split("/").pop();
       const pdfName = generated.pdf.path.split("/").pop();
 

@@ -7,7 +7,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/TWOJA_NAZWA/offer-app.git
+git remote add origin https://github.com/TWOJA_NAZWA/JobApplicationManager.git
 git push -u origin main
 ```
 
@@ -16,7 +16,7 @@ git push -u origin main
 1. Wejdź na https://app.netlify.com
 2. Kliknij "Add new site" → "Import an existing project"
 3. Wybierz GitHub i zaloguj się
-4. Wybierz repo `offer-app`
+4. Wybierz repo `JobApplicationManager`
 5. Ustawienia deploymentu:
    - **Build command**: `npm run build`
    - **Publish directory**: `dist`
