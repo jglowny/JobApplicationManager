@@ -929,6 +929,14 @@ function App() {
           setActiveView("offers");
           setIsFormOpen(true);
         }}
+        onOpenOffers={() => {
+          setActiveView("offers");
+        }}
+        onOpenCv={() => {
+          setIsFormOpen(false);
+          setActiveView("cv");
+        }}
+        activeView={activeView}
         isDarkMode={isDarkMode}
         onToggleTheme={() => setIsDarkMode((prev) => !prev)}
         useFirestore={useFirestore}

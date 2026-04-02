@@ -65,6 +65,12 @@
   min-width: 0;
 }
 
+.app-topbar-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .add-offer-link {
   border: none;
   border-radius: 999px;
@@ -103,10 +109,21 @@
 }
 
 .app-topbar .jobs-link {
+  border: none;
   margin-top: 0;
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
   white-space: nowrap;
+  background: #eef2ff;
+  color: #2f3a66;
+  text-decoration: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.app-topbar .jobs-link.active {
+  background: #3d66f5;
+  color: #fff;
 }
 
 .app-topbar .data-actions {
@@ -177,7 +194,7 @@
 
 .mobile-settings {
   position: relative;
-  display: none;
+  display: inline-flex;
 }
 
 .mobile-settings-button {
@@ -212,6 +229,31 @@
   flex-direction: column;
   gap: 0.5rem;
   z-index: 200;
+}
+
+.settings-statuses {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.3rem;
+
+  div {
+    background: #f4f6fb;
+    border: 1px solid #e3e7f0;
+    border-radius: 8px;
+    padding: 0.3rem 0.55rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+  }
+
+  span {
+    color: #5b6476;
+  }
+
+  strong {
+    color: #1f2a44;
+  }
 }
 
 .mobile-settings-item {
@@ -1361,6 +1403,15 @@
     flex-wrap: nowrap;
   }
 
+  .app-topbar-links {
+    gap: 0.35rem;
+
+    .jobs-link {
+      padding: 0.25rem 0.55rem;
+      font-size: 0.74rem;
+    }
+  }
+
   .app-topbar-title {
     font-size: 0.95rem;
   }
@@ -1376,12 +1427,6 @@
     gap: 0.4rem;
   }
 
-  .app-topbar-right > .theme-switch,
-  .app-topbar-right > .storage-switch,
-  .app-topbar-right > .data-actions {
-    display: none;
-  }
-
   .mobile-settings-menu .theme-switch {
     display: inline-flex;
   }
@@ -1390,10 +1435,6 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .mobile-settings {
-    display: inline-flex;
   }
 
   .app-topbar .data-actions {
