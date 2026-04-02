@@ -550,6 +550,7 @@ function App() {
       company: payload.company,
       url: payload.url,
       status: payload.status,
+      category: payload.category,
       description: payload.description,
       notes: payload.notes,
       offerAddedAt: payload.offerAddedAt,
