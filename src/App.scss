@@ -1275,6 +1275,74 @@
   }
 }
 
+.analysis-inline-error {
+  background: #ffe7e7;
+  border: 1px solid #f0b5b5;
+  color: #8e2525;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.analysis-inline-progress {
+  background: #eaf2ff;
+  border: 1px solid #bfd4ff;
+  color: #244a94;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.analysis-modal {
+  max-width: min(960px, 92vw);
+  max-height: 85vh;
+  overflow: auto;
+  background: #111827;
+  color: #e2e8f0;
+
+  h3 {
+    margin: 0 0 0.6rem;
+    color: #fff;
+  }
+}
+
+.analysis-score {
+  margin: 0.4rem 0 0.6rem;
+  font-weight: 700;
+  color: #c7d2fe;
+}
+
+.analysis-summary {
+  margin-top: 0;
+  color: #d7def0;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+
+  section {
+    border: 1px solid #25314e;
+    border-radius: 12px;
+    padding: 0.7rem 0.9rem;
+    background: #0f172a;
+  }
+
+  h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    color: #e6ecff;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1rem;
+    display: grid;
+    gap: 0.35rem;
+    color: #d4dbef;
+    font-size: 0.9rem;
+  }
+}
+
 .download-link {
   border-radius: 999px;
   padding: 0.2rem 0.7rem;

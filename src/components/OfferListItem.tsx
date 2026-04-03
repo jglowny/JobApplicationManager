@@ -8,6 +8,7 @@ type OfferListItemProps = {
   onEdit: (offer: Offer) => void;
   onDelete: (offer: Offer) => void;
   onStatusChange: (offerId: string | number, status: OfferStatus) => void;
+  onAnalyze: (offer: Offer) => void;
 };
 
 export default function OfferListItem({
@@ -16,6 +17,7 @@ export default function OfferListItem({
   onEdit,
   onDelete,
   onStatusChange,
+  onAnalyze,
 }: OfferListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isExpired = offer.offerClosedAt
@@ -56,6 +58,7 @@ export default function OfferListItem({
             onEdit={onEdit}
             onDelete={onDelete}
             onStatusChange={onStatusChange}
+            onAnalyze={onAnalyze}
             variant="details"
           />
         </div>

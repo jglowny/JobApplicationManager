@@ -18,6 +18,7 @@ type OffersSectionProps = {
   onEdit: (offer: Offer) => void;
   onDelete: (offer: Offer) => void;
   onStatusChange: (offerId: string | number, status: OfferStatus) => void;
+  onAnalyze: (offer: Offer) => void;
 };
 
 export default function OffersSection({
@@ -30,6 +31,7 @@ export default function OffersSection({
   onEdit,
   onDelete,
   onStatusChange,
+  onAnalyze,
 }: OffersSectionProps) {
   const [viewMode, setViewMode] = useState<"cards" | "list">("list");
   const [categoryFilter, setCategoryFilter] = useState<"all" | "web" | "it">(
@@ -64,6 +66,7 @@ export default function OffersSection({
           onEdit={onEdit}
           onDelete={onDelete}
           onStatusChange={onStatusChange}
+          onAnalyze={onAnalyze}
         />
       ) : (
         <OfferCard
@@ -73,6 +76,7 @@ export default function OffersSection({
           onEdit={onEdit}
           onDelete={onDelete}
           onStatusChange={onStatusChange}
+          onAnalyze={onAnalyze}
         />
       ),
     );

@@ -7,6 +7,7 @@ type OfferCardProps = {
   onEdit: (offer: Offer) => void;
   onDelete: (offer: Offer) => void;
   onStatusChange: (offerId: string | number, status: OfferStatus) => void;
+  onAnalyze: (offer: Offer) => void;
   variant?: "full" | "details";
 };
 
@@ -16,6 +17,7 @@ export default function OfferCard({
   onEdit,
   onDelete,
   onStatusChange,
+  onAnalyze,
   variant = "full",
 }: OfferCardProps) {
   const isDetails = variant === "details";
@@ -204,6 +206,9 @@ export default function OfferCard({
       </div>
 
       <div className="offer-actions">
+        <button type="button" onClick={() => onAnalyze(offer)}>
+          Analizuj CV vs oferta
+        </button>
         <button type="button" onClick={() => onEdit(offer)}>
           Edytuj
         </button>

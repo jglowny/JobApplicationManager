@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import * as cheerio from "cheerio";
 import { chromium } from "playwright";
+import multer from "multer";
+import pdfParse from "pdf-parse";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { initializeApp } from "firebase/app";
@@ -18,6 +20,12 @@ import { renderCvHtml } from "./cvTemplate.mjs";
 const app = express();
 const port = process.env.PORT || 5174;
 const uploadsDir = path.join(process.cwd(), "uploads");
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 12 * 1024 * 1024,
+  },
+});
 
 const requiredEnv = (key) => {
   const value = process.env[key];
@@ -399,6 +407,100 @@ const findExistingOfferByUrl = async (url) => {
   return snapshot.empty ? null : snapshot.docs[0];
 };
 
+const extractPdfText = async (buffer) => {
+  if (!buffer || buffer.length === 0) return "";
+  const parsed = await pdfParse(buffer);
+  return typeof parsed.text === "string"
+    ? parsed.text.replace(/\s+/g, " ").trim()
+    : "";
+};
+
+const truncateText = (value, maxLength = 12000) => {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength)}...`;
+};
+
+const requestOfferCvAnalysis = async ({ cvText, offerText }) => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw Object.assign(new Error("Missing required env var: OPENAI_API_KEY"), {
+      statusCode: 500,
+    });
+  }
+
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const systemPrompt =
+    "Jesteś rekruterem technicznym. Zwróć wyłącznie poprawny JSON bez markdown. " +
+    "Oceń dopasowanie CV do ogłoszenia i podaj konkretne poprawki.";
+
+  const userPrompt = [
+    "Przeanalizuj dopasowanie CV do oferty.",
+    "Zwróć JSON w formacie:",
+    '{"score":number,"summary":string,"strengths":string[],"gaps":string[],"cvImprovements":string[],"tailoredKeywords":string[]}',
+    "",
+    "CV:",
+    truncateText(cvText),
+    "",
+    "Ogłoszenie:",
+    truncateText(offerText),
+  ].join("\n");
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.2,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const details = data?.error?.message || "OpenAI request failed.";
+    throw Object.assign(new Error(details), { statusCode: 502 });
+  }
+
+  const content = data?.choices?.[0]?.message?.content;
+  if (!content || typeof content !== "string") {
+    throw Object.assign(new Error("Nieprawidłowa odpowiedź modelu."), {
+      statusCode: 502,
+    });
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    return {
+      score: Number(parsed.score) || 0,
+      summary: String(parsed.summary || ""),
+      strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
+      gaps: Array.isArray(parsed.gaps) ? parsed.gaps : [],
+      cvImprovements: Array.isArray(parsed.cvImprovements)
+        ? parsed.cvImprovements
+        : [],
+      tailoredKeywords: Array.isArray(parsed.tailoredKeywords)
+        ? parsed.tailoredKeywords
+        : [],
+    };
+  } catch {
+    return {
+      score: 0,
+      summary: content,
+      strengths: [],
+      gaps: [],
+      cvImprovements: [],
+      tailoredKeywords: [],
+    };
+  }
+};
+
 const saveBufferInProject = async ({ kind, fileName, mimeType, buffer }) => {
   const safeKind = toSafeFileName(kind, "other");
   const datePart = new Date().toISOString().slice(0, 10);
@@ -627,6 +729,58 @@ app.post("/api/offer-assets", async (req, res) => {
     }
   }
 });
+
+app.post(
+  "/api/analyze-match",
+  upload.fields([
+    { name: "cvFile", maxCount: 1 },
+    { name: "offerFile", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const cvFile = req.files?.cvFile?.[0];
+    const offerFile = req.files?.offerFile?.[0];
+    const offerTextRaw =
+      typeof req.body?.offerText === "string" ? req.body.offerText : "";
+
+    if (!cvFile) {
+      return res.status(400).json({ error: "Brak pliku CV (cvFile)." });
+    }
+
+    if (!offerFile && !offerTextRaw.trim()) {
+      return res
+        .status(400)
+        .json({ error: "Brak pliku ogłoszenia (offerFile) lub offerText." });
+    }
+
+    try {
+      const cvText = await extractPdfText(cvFile.buffer);
+      const offerPdfText = offerFile ? await extractPdfText(offerFile.buffer) : "";
+      const offerText = offerPdfText || offerTextRaw;
+
+      if (!cvText.trim()) {
+        return res
+          .status(400)
+          .json({ error: "Nie udało się odczytać treści z CV PDF." });
+      }
+
+      if (!offerText.trim()) {
+        return res
+          .status(400)
+          .json({ error: "Nie udało się odczytać treści z ogłoszenia." });
+      }
+
+      const analysis = await requestOfferCvAnalysis({ cvText, offerText });
+      return res.status(200).json(analysis);
+    } catch (error) {
+      const statusCode = error?.statusCode || 500;
+      const details = error instanceof Error ? error.message : "Unknown error";
+      return res.status(statusCode).json({
+        error: "Nie udało się przeprowadzić analizy CV i ogłoszenia.",
+        details,
+      });
+    }
+  },
+);
 
 app.post("/api/offers", async (req, res) => {
   const targetUrl =

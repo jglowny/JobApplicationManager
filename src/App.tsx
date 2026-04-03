@@ -19,6 +19,7 @@ import CvBuilder from "./components/CvBuilder";
 import StructuredDataModal from "./components/StructuredDataModal";
 import { type OfferExport, type OfferFormState } from "./types/offer";
 import {
+  analyzeOfferMatch,
   fetchOfferData,
   fetchPdf,
   fetchScreenshot,
@@ -81,6 +82,16 @@ type FirestoreOffer = Omit<Offer, "id" | "screenshotBlob" | "pdfBlob" | "cvBlob"
 };
 
 const offersCollection = collection(firestore, "offers");
+
+type OfferAnalysisView = {
+  offerTitle: string;
+  score: number;
+  summary: string;
+  strengths: string[];
+  gaps: string[];
+  cvImprovements: string[];
+  tailoredKeywords: string[];
+};
 
 const omitUndefined = <T extends Record<string, unknown>>(value: T) =>
   Object.fromEntries(
@@ -165,6 +176,12 @@ function App() {
     null,
   );
   const [isStructuredModalOpen, setIsStructuredModalOpen] = useState(false);
+  const [isAnalyzingMatch, setIsAnalyzingMatch] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<OfferAnalysisView | null>(
+    null,
+  );
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
   const [existingFiles, setExistingFiles] = useState<{
     screenshotBlob?: Blob;
@@ -690,6 +707,55 @@ function App() {
     await refreshOffers();
   };
 
+  const readOfferBlob = async (blob?: Blob, filePath?: string) => {
+    if (blob) return blob;
+    const fileUrl = toPublicFileUrl(filePath);
+    if (!fileUrl) return undefined;
+    const response = await fetch(fileUrl);
+    if (!response.ok) return undefined;
+    return response.blob();
+  };
+
+  const handleAnalyzeOffer = async (offer: Offer) => {
+    setAnalysisError(null);
+    setIsAnalyzingMatch(true);
+
+    try {
+      const cvBlob = await readOfferBlob(offer.cvBlob, offer.cvPath);
+      if (!cvBlob) {
+        throw new Error("Brak pliku CV. Dodaj CV do oferty przed analizą.");
+      }
+
+      const offerPdfBlob = await readOfferBlob(offer.pdfBlob, offer.pdfPath);
+      const offerText =
+        offer.description?.trim() ||
+        [offer.title, offer.company, offer.url].filter(Boolean).join("\n");
+
+      const analysis = await analyzeOfferMatch({
+        cvFile: cvBlob,
+        offerFile: offerPdfBlob,
+        offerText,
+      });
+
+      setAnalysisResult({
+        offerTitle: offer.title,
+        score: analysis.score,
+        summary: analysis.summary,
+        strengths: analysis.strengths,
+        gaps: analysis.gaps,
+        cvImprovements: analysis.cvImprovements,
+        tailoredKeywords: analysis.tailoredKeywords,
+      });
+      setIsAnalysisModalOpen(true);
+    } catch (error) {
+      setAnalysisError(
+        error instanceof Error ? error.message : "Nie udało się wykonać analizy.",
+      );
+    } finally {
+      setIsAnalyzingMatch(false);
+    }
+  };
+
   const handleExport = async () => {
     const zip = new JSZip();
     const assetsFolder = zip.folder("assets");
@@ -1015,10 +1081,82 @@ function App() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}
+            onAnalyze={handleAnalyzeOffer}
           />
         </>
       ) : (
         <CvBuilder />
+      )}
+
+      {analysisError && (
+        <div className="analysis-inline-error" role="alert">
+          {analysisError}
+        </div>
+      )}
+
+      {isAnalyzingMatch && (
+        <div className="analysis-inline-progress">Analizuję CV i ogłoszenie...</div>
+      )}
+
+      {isAnalysisModalOpen && analysisResult && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setIsAnalysisModalOpen(false)}
+        >
+          <div
+            className="modal-content analysis-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setIsAnalysisModalOpen(false)}
+              aria-label="Zamknij"
+            >
+              ✕
+            </button>
+            <h3>Analiza dopasowania: {analysisResult.offerTitle}</h3>
+            <p className="analysis-score">Wynik dopasowania: {analysisResult.score}/100</p>
+            <p className="analysis-summary">{analysisResult.summary}</p>
+
+            <div className="analysis-grid">
+              <section>
+                <h4>Mocne strony</h4>
+                <ul>
+                  {analysisResult.strengths.map((item) => (
+                    <li key={`strength-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h4>Luki</h4>
+                <ul>
+                  {analysisResult.gaps.map((item) => (
+                    <li key={`gap-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h4>Co poprawić w CV</h4>
+                <ul>
+                  {analysisResult.cvImprovements.map((item) => (
+                    <li key={`improve-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h4>Słowa kluczowe</h4>
+                <ul>
+                  {analysisResult.tailoredKeywords.map((item) => (
+                    <li key={`keyword-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
       )}
 
       <StructuredDataModal

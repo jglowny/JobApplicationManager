@@ -22,6 +22,15 @@ export type OfferAssetsResponse = {
   pdf: SaveFileResponse;
 };
 
+export type OfferMatchAnalysis = {
+  score: number;
+  summary: string;
+  strengths: string[];
+  gaps: string[];
+  cvImprovements: string[];
+  tailoredKeywords: string[];
+};
+
 const handleResponse = async <T>(response: Response, fallback: string) => {
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -119,5 +128,34 @@ export const saveFileInProject = async (
   return handleResponse<SaveFileResponse>(
     response,
     "Nie udało się zapisać pliku w projekcie.",
+  );
+};
+
+export const analyzeOfferMatch = async ({
+  cvFile,
+  offerFile,
+  offerText,
+}: {
+  cvFile: Blob;
+  offerFile?: Blob;
+  offerText?: string;
+}) => {
+  const formData = new FormData();
+  formData.append("cvFile", cvFile, "cv.pdf");
+  if (offerFile) {
+    formData.append("offerFile", offerFile, "offer.pdf");
+  }
+  if (offerText?.trim()) {
+    formData.append("offerText", offerText.trim());
+  }
+
+  const response = await fetch("/api/analyze-match", {
+    method: "POST",
+    body: formData,
+  });
+
+  return handleResponse<OfferMatchAnalysis>(
+    response,
+    "Nie udało się przeprowadzić analizy CV i ogłoszenia.",
   );
 };
